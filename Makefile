@@ -1,23 +1,27 @@
 .SUFFIXES: .c
 
 PREFIX = src
+INCPRE = include
 
-SRCS = $(PREFIX)/main.c
+SRCS = $(PREFIX)/main.c $(PREFIX)/image.c $(PREFIX)/html.c
 OBJS = $(SRCS:.c=.o)
-OUTPUT = main
+OUTPUT = album
 
 CC = gcc
-CFLAGS = -Wall -pedantic
+CFLAGS = -Wall -pedantic -I$(INCPRE)
 LIBS = 
 
-main: $(OBJS)
+$(OUTPUT): $(OBJS)
 	$(CC) $(CFLAGS) -o $(OUTPUT) $(OBJS) $(LIBS)
 
+$(PREFIX)/image.o: $(INCPRE)/image.h
+$(PREFIX)/html.o: $(INCPRE)/html.h
+
 run: $(OUTPUT)
-	./$(OUTPUT)
+	./$(OUTPUT) photos/*
 
 clean:
-	rm -f $(OBJS) $(OUTPUT)
+	rm -f $(OBJS) $(OUTPUT) *.jpg *.html
 
 depend:
 	makedepend -I/usr/local/include/g++ -- $(CFLAGS) -- $(SRCS) 

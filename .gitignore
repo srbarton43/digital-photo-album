@@ -1,3 +1,9 @@
-main
+album
 *.o
 photos
+tmp
+.vscode*
+*.jpg
+*.html
+compile_commands.json
+.cache
