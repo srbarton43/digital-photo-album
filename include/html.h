@@ -1,7 +1,11 @@
 #ifndef __HTML_H
 #define __HTML_H
 
-/* library for creating index.html file */
+/* 
+ * html.h - module for constructing html photo album
+ * 
+ * SRB -- 24W
+ */
 
 /*
  * html_init - initializes static variables for html doc

@@ -1,5 +1,12 @@
 #ifndef __UTIL_H
 #define __UTIL_H
+/*
+ * utils.h - utilities module
+ * 
+ * SRB -- 24W
+ * 
+ * This module provides utility functions for the main program and for other modules
+*/
 
 /*
  * util_resize_photos - resizes all photos besides the first

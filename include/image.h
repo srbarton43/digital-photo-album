@@ -2,7 +2,11 @@
 #define __IMAGE_H
 
 /*
- * library for calling ImageMagick commands
+ * image.h - module for calling ImageMagick commands
+ * 
+ * SRB -- 24W
+ * 
+ * Each function wraps syscalls and ImageMagick commands
  */
 
 #define CLOCKWISE  0

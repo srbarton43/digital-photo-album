@@ -32,9 +32,10 @@ int util_resize_photos(const int argc, char **argv) {
     p2 = fork();
     p3 = fork();
     p4 = fork();
-
+    /* each process gets a chunk of photos to resize */
+    /* chunksize = (argc-2)/MAX_PROCESSES */
     if (p1 == 0) {
-      for (int i = 2; i < argc; i += MAX_PROCESSES) {
+      for (int i = 2; i < argc; i += MAX_PROCESSES) { /* starts indexing at 2 becuse the parent process handles first photo */
         resize_photo(argv[i]);
       }
       exit(0);
@@ -75,15 +76,15 @@ void util_get_filenames(const char *filename, char *thumbnail_fn, char *medium_f
 int util_process_photo(const char *filename, int order) {
   int pid, rc, status; /* setup */
   printf("%s\n", filename);
-  char thumbnail_fn[strlen(filename)+4];
-  char medium_fn[strlen(filename)+5];
+  char thumbnail_fn[strlen(filename) + 4];
+  char medium_fn[strlen(filename) + 5];
   util_get_filenames(filename, thumbnail_fn, medium_fn);
   /* if it's the first image, must generate thumbnail and medium img */
   if (order == 1) {
     img_resize(filename, medium_fn, "25%");
     pid = img_resize(filename, thumbnail_fn, "10%");
-    waitpid(pid, &status, 0); /* must wait for child to create thumbnail */
   }
+  waitpid(pid, &status, 0); /* must wait for child to create thumbnail before displaying it */
   int display_pid = img_display(thumbnail_fn);
 
   /* prompt user for rotation */
@@ -122,17 +123,16 @@ static void resize_photo(const char *filename) {
   img_resize(filename, medium_fn, "25%");
 }
 
-
-/* 
+/*
  * ask_rotation - prompts user to rotate photo
- * 
+ *
  * filename := path to image
  */
 static void ask_rotation(const char *filename) {
   int rc;
   /* get thumbnail filename and medium filename */
-  char thumbnail_fn[strlen(filename)+4];  // accomodates for prefix
-  char medium_fn[strlen(filename)+5];     // accomodates for prefix
+  char thumbnail_fn[strlen(filename) + 4];  // accomodates for prefix
+  char medium_fn[strlen(filename) + 5];     // accomodates for prefix
   util_get_filenames(filename, thumbnail_fn, medium_fn);
   char *buffer = malloc((MAX_INPUT_LEN + 1) * sizeof(char));
   while (1) {
@@ -148,12 +148,10 @@ static void ask_rotation(const char *filename) {
       img_rotate(medium_fn, medium_fn, CLOCKWISE);
       img_rotate(thumbnail_fn, thumbnail_fn, CLOCKWISE);
       printf("Rotation: Clockwise\n");
-    } else if (strcmp(buffer, "cw") == 0) {
     } else if (strcmp(buffer, "ccw") == 0) {
       img_rotate(medium_fn, medium_fn, CCLOCKWISE);
       img_rotate(thumbnail_fn, thumbnail_fn, CCLOCKWISE);
-      printf("Rotation: Counter-clockwise\n");
-    } else if (strcmp(buffer, "cw") == 0) {
+      printf("Rotation: Counter-Clockwise\n");
     } else {
       fprintf(stderr, "invalid option for rotating the image...try again\n");
       continue; /* loops back to the top without breaking */
@@ -165,12 +163,12 @@ static void ask_rotation(const char *filename) {
 
 /*
  * ask_caption - asks user for caption
- * 
+ *
  * caption  := alloc'd buffer of size MAX_INPUT_LEN + 1
- * 
+ *
  * notes:
  *  stores caption in alloc'd caption
- * 
+ *
  * returns:
  *  result of get_input, ie -1 if input overflows and zero otherwise
  */
@@ -211,7 +209,10 @@ static int get_input(const char *message, char *buffer, int len) {
     printf("%s: ", message);
 
   // get input string
-  fgets(buffer, len, stdin); /* new-line terminated string goes in buffer */
+  if (fgets(buffer, len, stdin) == NULL) {/* new-line terminated string goes in buffer */
+    fprintf(stderr, "EOF entered\n");
+    return -1;
+  }
   fetched = strlen(buffer);  /* length of input string */
 
   if (fetched + 1 >= len) {

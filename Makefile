@@ -18,7 +18,7 @@ $(PREFIX)/image.o: $(INCPRE)/image.h
 $(PREFIX)/html.o: $(INCPRE)/html.h
 $(PREFIX)/util.o: $(INCPRE)/util.h
 
-run: $(OUTPUT)
+test: $(OUTPUT)
 	./$(OUTPUT) photos/*
 
 clean:
