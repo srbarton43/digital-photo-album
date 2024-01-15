@@ -3,7 +3,7 @@
 PREFIX = src
 INCPRE = include
 
-SRCS = $(PREFIX)/main.c $(PREFIX)/image.c $(PREFIX)/html.c
+SRCS = $(PREFIX)/main.c $(PREFIX)/image.c $(PREFIX)/html.c $(PREFIX)/util.c
 OBJS = $(SRCS:.c=.o)
 OUTPUT = album
 
@@ -16,6 +16,7 @@ $(OUTPUT): $(OBJS)
 
 $(PREFIX)/image.o: $(INCPRE)/image.h
 $(PREFIX)/html.o: $(INCPRE)/html.h
+$(PREFIX)/util.o: $(INCPRE)/util.h
 
 run: $(OUTPUT)
 	./$(OUTPUT) photos/*
