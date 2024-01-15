@@ -8,7 +8,7 @@ OBJS = $(SRCS:.c=.o)
 OUTPUT = album
 
 CC = gcc
-CFLAGS = -Wall -pedantic -I$(INCPRE)
+CFLAGS = -Wall -pedantic -I$(INCPRE) -g
 LIBS = 
 
 $(OUTPUT): $(OBJS)

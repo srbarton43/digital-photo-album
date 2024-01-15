@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util.h"
+
 static unsigned int HTML_MAX_SIZE;  // current max size of buffer
 static char *html_string;           // html string buffer - alloc'ed on heap
 
@@ -17,19 +19,18 @@ void html_init(void) {
   strcpy(html_string, intro);
 }
 
-void html_add_photo(const char *bn, const char *caption) {
+void html_add_photo(const char *filename, const char *caption) {
   /* get filenames */
-  char thumbnail_fn[strlen(bn) + 4]; /* thumbnail filename */
-  sprintf(thumbnail_fn, "tn_%s", bn);
-  char medium_fn[strlen(bn) + 5];
-  sprintf(medium_fn, "med_%s", bn);
+  char thumbnail_fn[strlen(filename) + 4]; /* thumbnail filename */
+  char medium_fn[strlen(filename) + 5];
+  util_get_filenames(filename, thumbnail_fn, medium_fn);
 
   /* construct html parts */
   char header[strlen(caption) + 10];  // size of caption plus html elems
   char *header_restrict =
       "<h2>%s</h2>\n";
   sprintf(header, header_restrict, caption);
-  char new_element[strlen(header) + (2 * strlen(bn) + 7) + 48];  // plus size of restrict
+  char new_element[strlen(header) + strlen(thumbnail_fn) + strlen(medium_fn) + 48];  // plus size of restrict
   char *img_restrict =
       "%s"
       "<a href=\"%s\">\n"

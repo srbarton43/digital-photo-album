@@ -3,10 +3,25 @@
 
 /* library for creating index.html file */
 
+/*
+ * html_init - initializes static variables for html doc
+ */
 void html_init(void);
 
-void html_add_photo(const char *bn, const char *caption);
+/*
+ * html_add_photo - adds photo, hyperlink, and caption
+ *
+ * filename := path to image
+ * caption  := user's caption
+ */
+void html_add_photo(const char *filename, const char *caption);
 
+/*
+ * html_write_to_file - write html file to disk
+ *
+ * notes:
+ *  - filename is 'index.html'
+ */
 void html_write_to_file(void);
 
 #endif

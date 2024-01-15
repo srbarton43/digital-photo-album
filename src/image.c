@@ -3,6 +3,7 @@
 
 #include "image.h"
 
+/* img_resize */
 int img_resize(const char *srcname, const char *dstname, const char *percent) {
   int rc;
   rc = fork();
@@ -14,6 +15,7 @@ int img_resize(const char *srcname, const char *dstname, const char *percent) {
   return rc;
 }
 
+/* img_rotate */
 int img_rotate(const char *srcname, const char *dstname, int rotation) {
   int rc;
   printf("rotating %s\n", srcname);
@@ -35,6 +37,7 @@ int img_rotate(const char *srcname, const char *dstname, int rotation) {
   return rc;
 }
 
+/* img_display */
 int img_display(const char *srcname) {
   int rc;
   rc = fork();

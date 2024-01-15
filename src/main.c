@@ -1,11 +1,13 @@
+#include <unistd.h>
+
 #include "util.h"
 #include "html.h"
 
 int main(int argc, char *argv[]) {
-  int rc, pid, status;
+  util_resize_photos(argc, argv);
   html_init();
   for (int i = 1; i < argc; i++) {
-    process_file(argv[i]);
+    util_process_photo(argv[i], i);
   }
   html_write_to_file();
   return 0;
