@@ -19,10 +19,9 @@
  * dstname  := rotates image path
  * rotation := either CLOCKWISE or CCLOCKWISE
  *
- * returns:
- *  - pid a command process
+ * note: the function waits for the conversion to finish before returning
  */
-int img_rotate(const char *srcname, const char *dstname, int rotation);
+void img_rotate(const char *srcname, const char *dstname, int rotation);
 
 /*
  * img_resize - resizes image to some percentage
@@ -30,11 +29,10 @@ int img_rotate(const char *srcname, const char *dstname, int rotation);
  * srcname  := original image path
  * dstname  := rotates image path
  * percent  := percent to resize to (eg. "10%")
- *
- * returns:
- *  - pid of resize process
+ * 
+ * note: the function waits for the conversion to finish before returning 
  */
-int img_resize(const char *srcname, const char *dstname, const char *percent);
+void img_resize(const char *srcname, const char *dstname, const char *percent);
 
 /* 
  * img_display - display the image

@@ -1,3 +1,10 @@
+/*
+ * util.c - util module source file
+ *
+ * SRB -- 24W
+ *
+ * see util.h for more details
+ */
 #include "util.h"
 
 #include <libgen.h>
@@ -34,6 +41,7 @@ int util_resize_photos(const int argc, char **argv) {
     p4 = fork();
     /* each process gets a chunk of photos to resize */
     /* chunksize = (argc-2)/MAX_PROCESSES */
+    /* each process handles every <MAX_PROCESSES>th image */
     if (p1 == 0) {
       for (int i = 2; i < argc; i += MAX_PROCESSES) { /* starts indexing at 2 becuse the parent process handles first photo */
         resize_photo(argv[i]);
@@ -74,7 +82,7 @@ void util_get_filenames(const char *filename, char *thumbnail_fn, char *medium_f
 
 /* util_process_file */
 int util_process_photo(const char *filename, int order) {
-  int pid, rc, status; /* setup */
+  int rc; /* setup */
   printf("%s\n", filename);
   char thumbnail_fn[strlen(filename) + 4];
   char medium_fn[strlen(filename) + 5];
@@ -82,9 +90,8 @@ int util_process_photo(const char *filename, int order) {
   /* if it's the first image, must generate thumbnail and medium img */
   if (order == 1) {
     img_resize(filename, medium_fn, "25%");
-    pid = img_resize(filename, thumbnail_fn, "10%");
+    img_resize(filename, thumbnail_fn, "10%");
   }
-  waitpid(pid, &status, 0); /* must wait for child to create thumbnail before displaying it */
   int display_pid = img_display(thumbnail_fn);
 
   /* prompt user for rotation */
@@ -97,6 +104,7 @@ int util_process_photo(const char *filename, int order) {
 
   /* add photo + caption to html document buffer */
   html_add_photo(filename, caption);
+  free(caption); /* free caption once it is in the html */
 
   /* kill display process */
   rc = kill(display_pid, SIGINT);
