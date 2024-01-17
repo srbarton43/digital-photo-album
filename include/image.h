@@ -6,7 +6,7 @@
  * 
  * SRB -- 24W
  * 
- * Each function wraps syscalls and ImageMagick commands
+ * This module wraps ImageMagick commands in a helpful API
  */
 
 #define CLOCKWISE  0

@@ -19,61 +19,39 @@
 #include "image.h"
 
 #define MAX_INPUT_LEN 32
-#define MAX_PROCESSES 4
 
-// static function prototypes
+/* static function prototypes */
 static int get_input(const char *message, char *buffer, int len);
 static void ask_rotation(const char *filename);
 static int ask_caption(char *caption);
 static void resize_photo(const char *filename);
 
 /* util_resize_photos */
-int util_resize_photos(const int argc, char **argv) {
-  int rc;
-  rc = fork();  // do it all in a child process and return to main
+int util_resize_photos(const int argc, char **argv, int *sv1) {
+  int rc, bytes;
+  rc = fork(); /* do it all in a child process and return to main */
   if (0 == rc) {
-    sleep(1); /* removes input lag for the first image */
-    /* create four processes */
-    int p1, p2, p3, p4;
-    p1 = fork();
-    p2 = fork();
-    p3 = fork();
-    p4 = fork();
-    /* each process gets a chunk of photos to resize */
-    /* chunksize = (argc-2)/MAX_PROCESSES */
-    /* each process handles every <MAX_PROCESSES>th image */
-    if (p1 == 0) {
-      for (int i = 2; i < argc; i += MAX_PROCESSES) { /* starts indexing at 2 becuse the parent process handles first photo */
-        resize_photo(argv[i]);
+    close(sv1[RPIPE]);          /* close the reading end of the pipe */
+    int to_parent = sv1[WPIPE]; /* a more relavant name */
+    for (int i = 1; i < argc; i++) {
+      resize_photo(argv[i]);
+      bytes = write(to_parent, &i, sizeof(int));
+      if (bytes < sizeof(int)) {
+        fprintf(stderr, "Error writing to pipe\n");
+        exit(-1);
       }
-      exit(0);
     }
-    if (p2 == 0) {
-      for (int i = 3; i < argc; i += MAX_PROCESSES) {
-        resize_photo(argv[i]);
-      }
-      exit(0);
-    }
-    if (p3 == 0) {
-      for (int i = 4; i < argc; i += MAX_PROCESSES) {
-        resize_photo(argv[i]);
-      }
-      exit(0);
-    }
-    if (p4 == 0) {
-      for (int i = 5; i < argc; i += MAX_PROCESSES) {
-        resize_photo(argv[i]);
-      }
-      exit(0);
-    }
+    close(to_parent); /* close pipe sending EOF to parent */
     exit(0);
   }
   return rc;
 }
 
 /* util_get_filenames */
-void util_get_filenames(const char *filename, char *thumbnail_fn, char *medium_fn) {
-  char copy[strlen(filename) + 1];
+void util_get_filenames(const char *filename, char *thumbnail_fn,
+                        char *medium_fn) {
+  char copy[strlen(filename) + 1]; /* copy the filename because the `basename`
+                 spec mentions that it might alter its parameter */
   strcpy(copy, filename);
   char *bn = basename(copy); /* filename stripped of path */
   sprintf(thumbnail_fn, "tn_%s", bn);
@@ -81,17 +59,15 @@ void util_get_filenames(const char *filename, char *thumbnail_fn, char *medium_f
 }
 
 /* util_process_file */
-int util_process_photo(const char *filename, int order) {
-  int rc; /* setup */
-  printf("%s\n", filename);
+int util_process_photo(const char *filename) {
+  int rc;
+  printf("Photo Filename: %s\n", filename); /* print out filename */
+  /* get html filenames */
   char thumbnail_fn[strlen(filename) + 4];
   char medium_fn[strlen(filename) + 5];
   util_get_filenames(filename, thumbnail_fn, medium_fn);
-  /* if it's the first image, must generate thumbnail and medium img */
-  if (order == 1) {
-    img_resize(filename, medium_fn, "25%");
-    img_resize(filename, thumbnail_fn, "10%");
-  }
+
+  /* display thumbnail and store the PID */
   int display_pid = img_display(thumbnail_fn);
 
   /* prompt user for rotation */
@@ -139,28 +115,33 @@ static void resize_photo(const char *filename) {
 static void ask_rotation(const char *filename) {
   int rc;
   /* get thumbnail filename and medium filename */
-  char thumbnail_fn[strlen(filename) + 4];  // accomodates for prefix
-  char medium_fn[strlen(filename) + 5];     // accomodates for prefix
+  char thumbnail_fn[strlen(filename) + 4]; // accomodates for prefix
+  char medium_fn[strlen(filename) + 5];    // accomodates for prefix
   util_get_filenames(filename, thumbnail_fn, medium_fn);
   char *buffer = malloc((MAX_INPUT_LEN + 1) * sizeof(char));
   while (1) {
-    rc = get_input("rotate the image 90 degrees? (cw=clockwise, ccw=counterclockwise, <empty>=stay-same)", buffer, MAX_INPUT_LEN);
+    rc = get_input("rotate the image 90 degrees? (cw=clockwise, "
+                   "ccw=counterclockwise, <empty>=stay-same)",
+                   buffer, MAX_INPUT_LEN);
     if (-1 == rc) {
-      // definitely bad input
+      // definitely bad input if its longer than MAX_INPUT_LEN
       fprintf(stderr, "invalid option for rotating the image...try again\n");
       continue;
     } else if (strlen(buffer) == 0) {
-      // no need to rotate thumbnail
+      /* no rotation */
       printf("Rotation: None\n");
     } else if (strcmp(buffer, "cw") == 0) {
+      /* clockwize */
       img_rotate(medium_fn, medium_fn, CLOCKWISE);
       img_rotate(thumbnail_fn, thumbnail_fn, CLOCKWISE);
       printf("Rotation: Clockwise\n");
     } else if (strcmp(buffer, "ccw") == 0) {
+      /* counterclockwise */
       img_rotate(medium_fn, medium_fn, CCLOCKWISE);
       img_rotate(thumbnail_fn, thumbnail_fn, CCLOCKWISE);
       printf("Rotation: Counter-Clockwise\n");
     } else {
+      /* invalid option for rotation */
       fprintf(stderr, "invalid option for rotating the image...try again\n");
       continue; /* loops back to the top without breaking */
     }
@@ -185,7 +166,9 @@ static int ask_caption(char *caption) {
   char *buffer = malloc((MAX_INPUT_LEN + 1) * sizeof(char));
   rc = get_input("Enter A Caption", buffer, MAX_INPUT_LEN);
   if (-1 == rc) {
-    // error in get_input
+    /* error in get_input */
+    /* here I decided to allow the abridged caption to exist */
+    strcpy(caption, buffer);
   } else if (strlen(buffer) == 0) {
     strcpy(caption, "Untitled");
   } else {
@@ -211,17 +194,19 @@ static int ask_caption(char *caption) {
  */
 static int get_input(const char *message, char *buffer, int len) {
   int rc = 0, fetched, lastchar;
-  if (buffer == NULL) return -1;
+  if (buffer == NULL)
+    return -1;
 
   if (message)
     printf("%s: ", message);
 
   // get input string
-  if (fgets(buffer, len, stdin) == NULL) {/* new-line terminated string goes in buffer */
+  if (fgets(buffer, len, stdin) ==
+      NULL) { /* new-line terminated string goes in buffer */
     fprintf(stderr, "EOF entered\n");
     return -1;
   }
-  fetched = strlen(buffer);  /* length of input string */
+  fetched = strlen(buffer); /* length of input string */
 
   if (fetched + 1 >= len) {
     fprintf(stderr, "input string exceeded allowed length\n");

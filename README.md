@@ -5,7 +5,8 @@ Programming Assignment 1 for COSC58
 ## What it Does
 
 This project creates a binary, `albun`, which allows a user to peruse a set of large images downloaded from a digital camera, and produce an html photo album.
-It uses multiple processes to resize images in the background, while correctly pipeling functionality which depend on user input.
+It uses a background process to resize images in the background, while correctly pipeling functionality which depend on user input.
+After the child background process has finished resizing a specific image, it sends the `argv` index of the image to a inter-process pipe, letting the parent process know that it can display the thumbnail and continue with the user-side functionality.
 
 ## Building
 
@@ -48,6 +49,25 @@ The resulting file structure would look like:
 |-- tn_3.jpg
 `-- tn_4.jpg
 ```
+
+## Modules
+
+All header files are in the `include` directory.
+
+### Image
+
+The image module provides an API which wrapps ImageMagick commands in fork/exec calls.
+It waits for the conversion processes to finish to prevent fork bombs when converting in mass.
+
+### Util
+
+A general utility module which provides APIs for resizing all images or processing an individual image with user input.
+This module also provides the API for getting the appropriate filenames, which is used both internally and in the HTML module
+
+### Html
+
+The html module handles formatting the html photo album in a buffer string in memory, and then writes the file to disk through an API call.
+The html buffer is appropriately resized when necessary to avoid buffer overflows.
 
 ## Limitations
 
