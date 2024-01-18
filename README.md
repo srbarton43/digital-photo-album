@@ -1,6 +1,6 @@
 # digital-photo-album
 
-Programming Assignment 1 for COSC58
+Completed for Operating Systems Class
 
 ## What it Does
 

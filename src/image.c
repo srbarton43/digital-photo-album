@@ -30,6 +30,7 @@ void img_resize(const char *srcname, const char *dstname, const char *percent) {
     exit(1);
   }
   /* wait for command to finish resizing image */
+  /* prevent fork bomb */
   waitpid(pid, &status, 0);
 }
 
@@ -59,6 +60,7 @@ void img_rotate(const char *srcname, const char *dstname, int rotation) {
     }
   }
   /* wait for conversion to finish before returning */
+  /* prevent fork bomb */
   waitpid(pid, &status, 0);
 }
 
